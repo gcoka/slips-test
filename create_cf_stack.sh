@@ -15,4 +15,5 @@ aws --region us-east-1 \
 aws --region us-east-1 \
   --profile gemcook \
   cloudformation describe-stack-events \
-  --stack-name gcoka-s3-with-sns
+  --stack-name gcoka-s3-with-sns \
+  | egrep "(FAILED|CREATE_COMPLETE)"
