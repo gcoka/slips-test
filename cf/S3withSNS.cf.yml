@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  AppName:
+    Type: String
+    Default: slips-log-bucket
+  Stage:
+    Type: String
+    AllowedValues:
+      - local
+      - develop
+      - release
+      - master
+    Default: develop
+
+Resources:
+  SNSTopic:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      TopicName: S3LogCreated
+  SNSTopicPolicy:
+    Type: 'AWS::SNS::TopicPolicy'
+    DependsOn:
+      - SNSTopic
+    Properties:
+      PolicyDocument:
+        Id: SNSTopicPolicy
+        Version: 2012-10-17
+        Statement:
+          - Sid: Statement-id
+            Effect: Allow
+            Principal:
+              AWS: '*'
+            Action: 'sns:Publish'
+            Resource: !Ref SNSTopic
+            Condition:
+              ArnLike:
+                'aws:SourceArn': !Join 
+                  - ''
+                  - - 'arn:aws:s3:::'
+                    - !Join [ "-", [ !Ref AppName, !Ref Stage ] ]
+      Topics:
+        - !Ref SNSTopic
+
+  SourceBucket:
+    Type: 'AWS::S3::Bucket'
+    DependsOn:
+      - SNSTopicPolicy
+    Properties:
+      BucketName: !Join [ "-", [ !Ref AppName, !Ref Stage ] ]
+      AccessControl: "Private"
+      NotificationConfiguration:
+        TopicConfigurations:
+          - Topic: !Ref SNSTopic
+            Event: s3:ObjectCreated:*
+            
+Outputs:
+  SNSTopicArn:
+    Description: 'SNS Topic arn'
+    Value: !Ref SNSTopic
+  BucketName:
+    Description: 'S3 BucketName'
+    Value: !Ref SourceBucket

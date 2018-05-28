@@ -1,0 +1,18 @@
+stack_name: sample-stack
+description: this is my app
+
+backend:
+  sns_topics:
+    - name: S3LogCreated
+      arn: arn:aws:sns:us-east-1:598003641956:S3LogCreated
+
+handler:
+  path: src/handler.py
+  args:
+    your_key1: value1
+    your_key2: value2
+
+bucket_mapping:
+  gcoka-test:
+    - prefix: logs/
+      format: [s3-lines, json]
